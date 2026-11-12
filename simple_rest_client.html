@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple REST Client</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f4f8;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .app {
+            max-width: 750px;
+            margin: auto;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            max-width: 250px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            display: block;
+            margin-top: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 18px;
+        }
+
+        #result {
+            margin-top: 18px;
+            padding: 18px;
+            background: #eef3f7;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .muted {
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <h1>Simple REST Client</h1>
+
+        <p class="muted">
+            Retrieve a sample record from a public REST API.
+        </p>
+
+        <label for="recordId">Enter Record ID (1–100)</label>
+
+        <input
+            type="number"
+            id="recordId"
+            min="1"
+            max="100"
+            value="1"
+        >
+
+        <button id="fetchButton">Fetch Record</button>
+
+        <p id="status" role="status">
+            Ready to retrieve a record.
+        </p>
+
+        <section id="result" aria-live="polite">
+            <p>No record loaded yet.</p>
+        </section>
+    </main>
+
+    <script>
+        const recordIdInput = document.getElementById("recordId");
+        const fetchButton = document.getElementById("fetchButton");
+        const statusElement = document.getElementById("status");
+        const resultElement = document.getElementById("result");
+
+        fetchButton.addEventListener("click", async function () {
+            const recordId = Number(recordIdInput.value);
+
+            if (
+                !Number.isInteger(recordId) ||
+                recordId < 1 ||
+                recordId > 100
+            ) {
+                statusElement.textContent =
+                    "Enter a whole number from 1 to 100.";
+
+                resultElement.replaceChildren();
+
+                return;
+            }
+
+            statusElement.textContent = "Requesting record...";
+            resultElement.replaceChildren();
+            fetchButton.disabled = true;
+
+            try {
+                const url =
+                    "https://jsonplaceholder.typicode.com/posts/" +
+                    recordId;
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(
+                        "The server returned HTTP " + response.status
+                    );
+                }
+
+                const record = await response.json();
+
+                const heading = document.createElement("h2");
+                heading.textContent = record.title;
+
+                const idParagraph = document.createElement("p");
+                idParagraph.textContent =
+                    "Record ID: " + record.id;
+
+                const userParagraph = document.createElement("p");
+                userParagraph.textContent =
+                    "User ID: " + record.userId;
+
+                const bodyParagraph = document.createElement("p");
+                bodyParagraph.textContent = record.body;
+
+                resultElement.append(
+                    heading,
+                    idParagraph,
+                    userParagraph,
+                    bodyParagraph
+                );
+
+                statusElement.textContent =
+                    "Record retrieved successfully.";
+
+            } catch (error) {
+                statusElement.textContent =
+                    "Request failed. Check your connection and try again.";
+
+                const errorMessage = document.createElement("p");
+                errorMessage.textContent = error.message;
+
+                resultElement.appendChild(errorMessage);
+
+            } finally {
+                fetchButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>
